@@ -1,2 +1,0 @@
-# NomeDeBostaCacete
-Bosta
