@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HACKER DUEL — 16 DIGITS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700;900&display=swap');
+
+  :root {
+    --bg: #05080f;
+    --panel: #0a101c;
+    --green: #00ff9d;
+    --green-dim: #00b36e;
+    --cyan: #00e5ff;
+    --red: #ff2a6d;
+    --yellow: #ffd600;
+    --purple: #b14aff;
+    --text: #c8f7e0;
+    --border: #1a3a2a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image: 
+      radial-gradient(ellipse at 20% 20%, rgba(0,255,157,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(0,229,255,0.04) 0%, transparent 50%),
+      linear-gradient(rgba(0,255,157,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,157,0.03) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  }
+
+  /* MATRIX RAIN */
+  #matrix {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.15;
+    pointer-events: none;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* HEADER */
+  header {
+    text-align: center;
+    padding: 30px 0 10px;
+  }
+  header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: clamp(1.8rem, 5vw, 3.2rem);
+    letter-spacing: 6px;
+    background: linear-gradient(90deg, var(--green), var(--cyan), var(--green));
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shine 4s linear infinite;
+    text-shadow: 0 0 30px rgba(0,255,157,0.4);
+  }
+  @keyframes shine {
+    to { background-position: 200% center; }
+  }
+  .subtitle {
+    color: var(--green-dim);
+    font-size: 0.9rem;
+    letter-spacing: 3px;
+    margin-top: 6px;
+  }
+
+  /* SCREENS */
+  .screen {
+    display: none;
+    animation: fadeIn 0.5s ease;
+  }
+  .screen.active { display: block; }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PANEL */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 20px 0;
+    box-shadow: 0 0 40px rgba(0,255,157,0.08), inset 0 0 60px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+  }
+
+  .panel-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    color: var(--cyan);
+    letter-spacing: 2px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .panel-title .dot {
+    width: 8px; height: 8px;
+    background: var(--green);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--green);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* INPUTS */
+  .digit-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    margin: 20px 0;
+  }
+  @media (max-width: 600px) {
+    .digit-grid { grid-template-columns: repeat(4, 1fr); }
+  }
+
+  .digit-input {
+    width: 100%;
+    aspect-ratio: 1;
+    background: #060c14;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    color: var(--green);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 1.5rem;
+    text-align: center;
+    outline: none;
+    transition: all 0.2s;
+    caret-color: var(--green);
+  }
+  .digit-input:focus {
+    border-color: var(--green);
+    box-shadow: 0 0 15px rgba(0,255,157,0.3);
+    background: #0a1520;
+  }
+  .digit-input.filled {
+    border-color: var(--green-dim);
+    color: var(--cyan);
+  }
+
+  /* BUTTONS */
+  .btn {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: all 0.25s;
+    text-transform: uppercase;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #00c97a, #00ff9d);
+    color: #03120c;
+    box-shadow: 0 0 25px rgba(0,255,157,0.4);
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 40px rgba(0,255,157,0.6);
+  }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .btn-danger {
+    background: linear-gradient(135deg, #c9184a, #ff2a6d);
+    color: white;
+    box-shadow: 0 0 20px rgba(255,42,109,0.3);
+  }
+  .btn-secondary {
+    background: transparent;
+    border: 2px solid var(--cyan);
+    color: var(--cyan);
+  }
+  .btn-secondary:hover {
+    background: rgba(0,229,255,0.1);
+  }
+  .btn-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  /* INFO BOX */
+  .info {
+    background: rgba(0,255,157,0.05);
+    border-left: 3px solid var(--green);
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  .info.warn {
+    border-left-color: var(--yellow);
+    background: rgba(255,214,0,0.05);
+    color: var(--yellow);
+  }
+  .info.danger {
+    border-left-color: var(--red);
+    background: rgba(255,42,109,0.05);
+    color: var(--red);
+  }
+
+  /* GAME STATUS */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px 18px;
+    background: #060c14;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .player-tag {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+  }
+  .player-tag span {
+    color: var(--cyan);
+  }
+  .attempts {
+    color: var(--yellow);
+  }
+
+  /* HISTORY */
+  .history {
+    max-height: 280px;
+    overflow-y: auto;
+    margin-top: 16px;
+  }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #060c14;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border: 1px solid transparent;
+    font-size: 0.95rem;
+    animation: slideIn 0.3s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  .history-item.perfect {
+    border-color: var(--green);
+    background: rgba(0,255,157,0.08);
+  }
+  .guess-code {
+    letter-spacing: 3px;
+    color: var(--cyan);
+    font-weight: bold;
+  }
+  .feedback {
+    margin-left: auto;
+    display: flex;
+    gap: 6px;
+  }
+  .peg {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+  }
+  .peg.black { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .peg.white { background: #fff; box-shadow: 0 0 6px #fff; }
+  .peg.empty { background: #222; border: 1px solid #444; }
+
+  .feedback-text {
+    font-size: 0.8rem;
+    color: var(--green-dim);
+  }
+
+  /* WIN / LOSE */
+  .result-screen {
+    text-align: center;
+    padding: 40px 20px;
+  }
+  .result-screen h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 2.2rem;
+    margin-bottom: 12px;
+  }
+  .result-screen.win h2 { color: var(--green); text-shadow: 0 0 30px var(--green); }
+  .result-screen.lose h2 { color: var(--red); text-shadow: 0 0 30px var(--red); }
+
+  .secret-reveal {
+    font-size: 1.4rem;
+    letter-spacing: 6px;
+    color: var(--cyan);
+    margin: 20px 0;
+    padding: 16px;
+    background: #060c14;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  /* PASSWORD DISPLAY (masked) */
+  .masked {
+    letter-spacing: 4px;
+    color: var(--purple);
+  }
+
+  /* TERMINAL LOG */
+  .terminal {
+    background: #030608;
+    border: 1px solid #1a2a1a;
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 0.8rem;
+    height: 120px;
+    overflow-y: auto;
+    margin-top: 16px;
+    color: var(--green-dim);
+  }
+  .terminal .line { margin-bottom: 4px; }
+  .terminal .cmd { color: var(--cyan); }
+  .terminal .ok { color: var(--green); }
+  .terminal .err { color: var(--red); }
+
+  /* GLITCH */
+  .glitch {
+    animation: glitch 0.3s ease;
+  }
+  @keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-3px, 2px); }
+    40% { transform: translate(3px, -1px); }
+    60% { transform: translate(-2px, -2px); }
+    80% { transform: translate(2px, 1px); }
+    100% { transform: translate(0); }
+  }
+
+  footer {
+    text-align: center;
+    padding: 30px 0 20px;
+    color: #2a4a3a;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+  }
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+
+<div class="container">
+  <header>
+    <h1>HACKER DUEL</h1>
+    <div class="subtitle">16-DIGIT BREACH PROTOCOL</div>
+  </header>
+
+  <!-- SCREEN 0: INTRO -->
+  <div id="screen-intro" class="screen active">
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span> INICIALIZANDO SISTEMA</div>
+      <div class="info">
+        Dois jogadores. Cada um cria uma senha secreta de <strong>16 dígitos</strong>.<br>
+        Depois, o <strong>Player 1</strong> tenta hackear a senha do Player 2.<br>
+        Feedback clássico estilo Mastermind: posições corretas + dígitos certos no lugar errado.
+      </div>
+      <div class="info warn">
+        ⚠ Aviso: virem a tela / fechem os olhos na hora de digitar a senha do outro!
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="startGame()">INICIAR PROTOCOLO</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 1: PLAYER 1 SET PASSWORD -->
+  <div id="screen-p1-set" class="screen">
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span> PLAYER 1 — CRIE SUA SENHA</div>
+      <div class="info">Digite 16 dígitos (0-9). O outro jogador NÃO pode ver.</div>
+      <div class="digit-grid" id="p1-grid"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="clearDigits('p1')">LIMPAR</button>
+        <button class="btn btn-primary" id="btn-p1-confirm" disabled onclick="confirmP1()">CONFIRMAR SENHA</button>
+      </div>
+      <div class="terminal" id="term-p1"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: PLAYER 2 SET PASSWORD -->
+  <div id="screen-p2-set" class="screen">
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span> PLAYER 2 — CRIE SUA SENHA</div>
+      <div class="info">Agora é a vez do Player 2. Player 1, vira a tela!</div>
+      <div class="digit-grid" id="p2-grid"></div>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="clearDigits('p2')">LIMPAR</button>
+        <button class="btn btn-primary" id="btn-p2-confirm" disabled onclick="confirmP2()">CONFIRMAR SENHA</button>
+      </div>
+      <div class="terminal" id="term-p2"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: HACKING (Player 1 attacks Player 2) -->
+  <div id="screen-hack" class="screen">
+    <div class="panel">
+      <div class="status-bar">
+        <div class="player-tag">ATACANTE: <span>PLAYER 1</span></div>
+        <div class="player-tag">ALVO: <span class="masked">••••••••••••••••</span></div>
+        <div class="attempts">TENTATIVAS: <span id="attempts-left">12</span></div>
+      </div>
+
+      <div class="panel-title"><span class="dot"></span> INSERIR CÓDIGO DE ACESSO</div>
+      <div class="digit-grid" id="guess-grid"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="clearDigits('guess')">LIMPAR</button>
+        <button class="btn btn-primary" id="btn-guess" disabled onclick="submitGuess()">HACKEAR</button>
+      </div>
+
+      <div class="history" id="history"></div>
+      <div class="terminal" id="term-hack"></div>
+    </div>
+  </div>
+
+  <!-- SCREEN 4: RESULT -->
+  <div id="screen-result" class="screen">
+    <div class="panel result-screen" id="result-box">
+      <h2 id="result-title">ACESSO CONCEDIDO</h2>
+      <p id="result-msg"></p>
+      <div class="secret-reveal" id="secret-reveal"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="location.reload()">NOVO DUELO</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>REALITY IA • SISTEMA FICTÍCIO • +18 / -18 • TUDO É SIMULAÇÃO</footer>
+</div>
+
+<script>
+  // ====================== MATRIX RAIN ======================
+  const canvas = document.getElementById('matrix');
+  const ctx = canvas.getContext('2d');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+  const fontSize = 14;
+  const columns = Math.floor(canvas.width / fontSize);
+  const drops = Array(columns).fill(1);
+
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(5, 8, 15, 0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff9d';
+    ctx.font = fontSize + 'px monospace';
+    for (let i = 0; i < drops.length; i++) {
+      const text = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+      if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    }
+  }
+  setInterval(drawMatrix, 50);
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+
+  // ====================== GAME STATE ======================
+  let p1Secret = '';
+  let p2Secret = '';
+  let attempts = 12;
+  let history = [];
+
+  // ====================== HELPERS ======================
+  function log(termId, msg, type = '') {
+    const term = document.getElementById(termId);
+    const line = document.createElement('div');
+    line.className = 'line ' + type;
+    line.innerHTML = msg;
+    term.appendChild(line);
+    term.scrollTop = term.scrollHeight;
+  }
+
+  function createDigitInputs(containerId, prefix) {
+    const grid = document.getElementById(containerId);
+    grid.innerHTML = '';
+    for (let i = 0; i < 16; i++) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = 1;
+      input.className = 'digit-input';
+      input.dataset.index = i;
+      input.dataset.prefix = prefix;
+      input.inputMode = 'numeric';
+      input.pattern = '[0-9]';
+      input.addEventListener('input', onDigitInput);
+      input.addEventListener('keydown', onDigitKey);
+      grid.appendChild(input);
+    }
+  }
+
+  function onDigitInput(e) {
+    const input = e.target;
+    let val = input.value.replace(/\D/g, '');
+    input.value = val;
+    if (val) {
+      input.classList.add('filled');
+      const next = input.nextElementSibling;
+      if (next) next.focus();
+    } else {
+      input.classList.remove('filled');
+    }
+    checkComplete(input.dataset.prefix);
+  }
+
+  function onDigitKey(e) {
+    const input = e.target;
+    if (e.key === 'Backspace' && !input.value) {
+      const prev = input.previousElementSibling;
+      if (prev) {
+        prev.focus();
+        prev.value = '';
+        prev.classList.remove('filled');
+        checkComplete(input.dataset.prefix);
+      }
+    }
+  }
+
+  function getDigits(prefix) {
+    const inputs = document.querySelectorAll(`.digit-input[data-prefix="${prefix}"]`);
+    return Array.from(inputs).map(i => i.value).join('');
+  }
+
+  function clearDigits(prefix) {
+    const inputs = document.querySelectorAll(`.digit-input[data-prefix="${prefix}"]`);
+    inputs.forEach(i => {
+      i.value = '';
+      i.classList.remove('filled');
+    });
+    checkComplete(prefix);
+    if (inputs[0]) inputs[0].focus();
+  }
+
+  function checkComplete(prefix) {
+    const code = getDigits(prefix);
+    const btnMap = {
+      p1: 'btn-p1-confirm',
+      p2: 'btn-p2-confirm',
+      guess: 'btn-guess'
+    };
+    const btn = document.getElementById(btnMap[prefix]);
+    if (btn) btn.disabled = code.length !== 16;
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+
+  // ====================== FLOW ======================
+  function startGame() {
+    createDigitInputs('p1-grid', 'p1');
+    showScreen('screen-p1-set');
+    log('term-p1', '<span class="cmd">></span> Aguardando senha do Player 1...');
+    setTimeout(() => document.querySelector('#p1-grid .digit-input').focus(), 300);
+  }
+
+  function confirmP1() {
+    p1Secret = getDigits('p1');
+    log('term-p1', `<span class="ok">✓</span> Senha registrada: ${'*'.repeat(16)}`);
+    document.getElementById('screen-p1-set').classList.add('glitch');
+    setTimeout(() => {
+      createDigitInputs('p2-grid', 'p2');
+      showScreen('screen-p2-set');
+      log('term-p2', '<span class="cmd">></span> Aguardando senha do Player 2...');
+      setTimeout(() => document.querySelector('#p2-grid .digit-input').focus(), 300);
+    }, 400);
+  }
+
+  function confirmP2() {
+    p2Secret = getDigits('p2');
+    log('term-p2', `<span class="ok">✓</span> Senha registrada: ${'*'.repeat(16)}`);
+    document.getElementById('screen-p2-set').classList.add('glitch');
+    setTimeout(() => {
+      createDigitInputs('guess-grid', 'guess');
+      showScreen('screen-hack');
+      log('term-hack', '<span class="cmd">></span> Conexão estabelecida. Alvo: PLAYER 2');
+      log('term-hack', '<span class="cmd">></span> Tentativas restantes: 12');
+      log('term-hack', '<span class="cmd">></span> Sistema de feedback ativo (Mastermind)');
+      setTimeout(() => document.querySelector('#guess-grid .digit-input').focus(), 300);
+    }, 400);
+  }
+
+  // ====================== MASTERMIND LOGIC ======================
+  function evaluate(guess, secret) {
+    const g = guess.split('');
+    const s = secret.split('');
+    let black = 0; // correct position
+    let white = 0; // correct digit, wrong position
+
+    const secretUsed = Array(16).fill(false);
+    const guessUsed = Array(16).fill(false);
+
+    // First pass: exact matches
+    for (let i = 0; i < 16; i++) {
+      if (g[i] === s[i]) {
+        black++;
+        secretUsed[i] = true;
+        guessUsed[i] = true;
+      }
+    }
+
+    // Second pass: wrong position
+    for (let i = 0; i < 16; i++) {
+      if (guessUsed[i]) continue;
+      for (let j = 0; j < 16; j++) {
+        if (!secretUsed[j] && g[i] === s[j]) {
+          white++;
+          secretUsed[j] = true;
+          break;
+        }
+      }
+    }
+    return { black, white };
+  }
+
+  function submitGuess() {
+    const guess = getDigits('guess');
+    if (guess.length !== 16) return;
+
+    attempts--;
+    document.getElementById('attempts-left').textContent = attempts;
+
+    const { black, white } = evaluate(guess, p2Secret);
+
+    // History item
+    const hist = document.getElementById('history');
+    const item = document.createElement('div');
+    item.className = 'history-item' + (black === 16 ? ' perfect' : '');
+    
+    let pegs = '';
+    for (let i = 0; i < black; i++) pegs += '<div class="peg black"></div>';
+    for (let i = 0; i < white; i++) pegs += '<div class="peg white"></div>';
+    // empty pegs for remaining
+    const remaining = 16 - black - white;
+    // we don't show 16 empty, just the feedback numbers
+
+    item.innerHTML = `
+      <span class="guess-code">${guess}</span>
+      <span class="feedback-text">${black} pos. certas • ${white} dígitos certos</span>
+      <div class="feedback">${pegs}</div>
+    `;
+    hist.prepend(item);
+
+    log('term-hack', `<span class="cmd">></span> Tentativa: ${guess}`);
+    log('term-hack', black === 16 
+      ? `<span class="ok">✓ BREACH SUCCESSFUL — ACESSO TOTAL</span>` 
+      : `<span class="err">✗ ${black} corretos na posição | ${white} corretos fora de posição</span>`);
+
+    clearDigits('guess');
+
+    if (black === 16) {
+      endGame(true);
+      return;
+    }
+    if (attempts <= 0) {
+      endGame(false);
+      return;
+    }
+    setTimeout(() => document.querySelector('#guess-grid .digit-input').focus(), 200);
+  }
+
+  function endGame(won) {
+    const box = document.getElementById('result-box');
+    const title = document.getElementById('result-title');
+    const msg = document.getElementById('result-msg');
+    const reveal = document.getElementById('secret-reveal');
+
+    if (won) {
+      box.classList.add('win');
+      box.classList.remove('lose');
+      title.textContent = 'ACESSO CONCEDIDO';
+      msg.textContent = 'Player 1 invadiu o sistema do Player 2 com sucesso!';
+    } else {
+      box.classList.add('lose');
+      box.classList.remove('win');
+      title.textContent = 'SISTEMA BLOQUEADO';
+      msg.textContent = 'Player 1 falhou. A senha do Player 2 permanece segura.';
+    }
+    reveal.innerHTML = `SENHA DO PLAYER 2:<br><strong style="color:var(--green)">${p2Secret}</strong>`;
+    showScreen('screen-result');
+  }
+</script>
+</body>
+</html>
